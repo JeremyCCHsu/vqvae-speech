@@ -1,0 +1,47 @@
+{
+    "T": 8192,
+    "fs": 16000,
+    "num_symbol": 256,
+    "dim_symbol_emb": 1,
+    "num_exemplar": 512,
+    "dim_exemplar": 64,
+    "num_speaker": 109,
+    "dim_speaker": 64,
+    "n_emb_project": 4096,
+    "n_downsample_stack": 6,
+    "initial_filter_width": 32,
+    "filter_width": 2,
+    "dilations": [1, 2, 4, 8, 16, 32, 64, 128, 256, 512,
+                  1, 2, 4, 8, 16, 32, 64, 128, 256, 512,
+                  1, 2, 4, 8, 16, 32, 64, 128, 256, 512,
+                  1, 2, 4, 8, 16, 32, 64, 128, 256, 512,
+                  1, 2, 4, 8, 16, 32, 64, 128, 256, 512],
+    "residual_channels": 128,
+    "dilation_channels": 128,
+    "skip_channels": 1028,
+    "training": {
+        "lr": 1e-4,
+        "beta1": 0.5,
+        "beta2": 0.999,
+        "batch_size": 4,
+        "refresh_freq": 500,
+        "nIterD": 5,
+        "lambda": 10,
+        "co_coeff": 10.0,
+        "nIterPretrain": 30000,
+        "intenseIter": 50000,
+        "maxIter": 1000000
+    },
+    "discriminator": {
+      "output": [128, 128],
+      "lipschitz": 1.0
+    },
+    "generator": {
+      "input": 64,
+      "output": [128, 128]
+    },
+    "encoder": {
+        "kernels": 5,
+        "filters": 128
+    }
+}
