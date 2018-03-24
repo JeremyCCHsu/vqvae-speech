@@ -45,6 +45,7 @@ All the exemplars are utilized at about the same order of magnitude of frequency
 
 # Dependency
 - Ubuntu 16.04
+  - ffmpeg
   - Python 3.6
     - Tensorflow 1.5.0  
 <br/>
@@ -53,8 +54,8 @@ All the exemplars are utilized at about the same order of magnitude of frequency
 # Usage
 Create a soft link in the project dir:
 ```bash
-git clone [this repo]
-cd [this repo]
+git clone https://github.com/JeremyCCHsu/vqvae-speech.git
+cd vqvae-speech
 mkdir dataset
 cd dataset
 wget http://homepages.inf.ed.ac.uk/jyamagis/release/VCTK-Corpus.tar.gz
@@ -68,8 +69,9 @@ cd ..
 
 pip install -r requirements
 
-# The double quotation mark is necessary
 # Convert wav into mu-law encoded sequence
+# The double quotation mark is necessary
+# WARNING: without ffmpeg, this script crashes with inf loop
 python wav2tfr.py   \
   --fs 16000 \
   --output_dir dataset/VCTK/tfr \
@@ -103,9 +105,9 @@ Training usually takes days on a Titan Xp. Progresses are significant during the
 The experiement were conducted on CSTR [VCTK corpus](http://homepages.inf.ed.ac.uk/jyamagis/page3/page58/page58.html).
 Download it [here](http://homepages.inf.ed.ac.uk/jyamagis/release/VCTK-Corpus.tar.gz).  
 Note: 
-  1. One the speakers (`p280`) is missing in VCTK's `speaker-info.txt` file.  
+  1. One of the speakers (`p280`) is missing in VCTK's `speaker-info.txt` file.  
   2. One of the sound files (`p376_295.raw`) isn't  in `wav` format. I simply ignored that file.  
-  3. One of the speakers (`p315` has no accompanying transcriptions, though this doesn't matter in our task. 
+  3. One of the speakers (`p315`) has no accompanying transcriptions, though this doesn't matter in our task. 
 <br/>
 <br/>
 
