@@ -12,9 +12,9 @@ WEIGHT_DECAY = 1e-10
 
 
 class VQVAE(object):
-  '''
+  """
   Vector-Quantization Variational Auto-encoder
-  '''
+  """
   def __init__(self, arch):
     self.arch = arch
     with tf.variable_scope('Embedding'):
@@ -67,33 +67,36 @@ class VQVAE(object):
 
   
   def _encoder(self, x):
-    '''
-    Note that we need a pair of reversal to ensure causality.
-    (i.e. no trailing pads)
-    `x`: [b, T, c]
-    '''
-    k_init = self.arch['initial_filter_width']
+    """
+    Encode the input into a continuous latent variable.
+    `x`: [b, T, c] (i.e. batches, time steps, channels)
+    """
 
-    b = tf.shape(x)[0]
-    o = tf.zeros([b, k_init - 1, self.arch['dim_symbol_emb']])
-    x = tf.concat([o, x], 1)
+    kernel_init = self.arch['initial_filter_width']
 
-    k_init = self.arch['initial_filter_width']
+    # Add zero-padding to the input (prepend along time-axis)
+    batch_size   = tf.shape(x)[0]
+    num_channels = tf.shape(x)[2] # equal to self.arch['dim_symbol_emb']
+    zero_padding = tf.zeros([batch_size, kernel_init - 1, num_channels])
+    x = tf.concat([zero_padding, x], 1)
+
+    # Apply a 1-D convolution to the input; initial filtering
     x = tf.layers.conv1d(
       inputs=x,
       filters=self.arch['residual_channels'],
-      kernel_size=k_init,
+      kernel_size=kernel_init,
       kernel_regularizer=tf.keras.regularizers.l2(WEIGHT_DECAY),
       name='initial_filtering',
       kernel_initializer=tf.initializers.variance_scaling(
         scale=1.43,
-        distribution='uniform'),
-    )
+        distribution='uniform'))
+
+    # Apply leaky ReLU
     x = tf.nn.leaky_relu(x, 2e-2)
 
-    x = tf.reverse(x, [1])  # paired op to enforce causality
+    # Apply dilated residual convolutions with gated activation
     for i in range(self.arch['n_downsample_stack']):
-      conv = tf.layers.conv1d(
+      x_conv = tf.layers.conv1d(
         inputs=x,
         filters=(i + 1) * self.arch['encoder']['filters'],
         kernel_size=self.arch['encoder']['kernels'],
@@ -103,9 +106,8 @@ class VQVAE(object):
         kernel_initializer=tf.initializers.variance_scaling(
           scale=1.15,
           distribution='uniform'),
-        kernel_regularizer=tf.keras.regularizers.l2(WEIGHT_DECAY),
-      )
-      gate = tf.layers.conv1d(
+        kernel_regularizer=tf.keras.regularizers.l2(WEIGHT_DECAY))
+      x_gate = tf.layers.conv1d(
         inputs=x,
         filters=(i + 1) * self.arch['encoder']['filters'],
         kernel_size=self.arch['encoder']['kernels'],
@@ -114,11 +116,10 @@ class VQVAE(object):
         # activation=tf.nn.sigmoid,
         kernel_initializer=tf.initializers.variance_scaling(distribution='uniform'),
         kernel_regularizer=tf.keras.regularizers.l2(WEIGHT_DECAY),
-        bias_initializer=tf.initializers.ones,
-      )
-      x = tf.nn.tanh(conv) * tf.nn.sigmoid(gate)
-    x = tf.reverse(x, [1])  # paired op to enforce causality
+        bias_initializer=tf.initializers.ones)
+      x = tf.nn.tanh(x_conv) * tf.nn.sigmoid(x_gate)
 
+    # Apply a final convolution
     x = tf.layers.conv1d(
       inputs=x,
       filters=self.arch['dim_exemplar'],
