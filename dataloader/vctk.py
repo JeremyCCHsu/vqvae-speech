@@ -73,7 +73,7 @@ class ByteWavReader(object):
 
         filenames = tf.gfile.Glob(file_pattern)
         if filenames:
-          print('\nData Loarder: {} files found\n'.format(len(filenames)))
+          print('Data Loader: {} files found\n'.format(len(filenames)))
         else:
           raise ValueError('No files found: {}'.format(file_pattern))
 
